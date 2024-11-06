@@ -1,7 +1,9 @@
+import os
+import random
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import random
 
+# Получаем токен из переменной окружения
 TOKEN = os.getenv("TOKEN")
 
 # Список возражений
@@ -13,7 +15,7 @@ objections = [
     "У вас есть опытные преподаватели?",
 ]
 
-# Ответы бота на успешное и неуспешное отработку возражений
+# Ответы бота на успешную и неуспешную отработку возражений
 positive_responses = [
     "Хороший ответ! Это действительно меня убедило.",
     "Вы меня убедили, теперь это звучит гораздо лучше!",
