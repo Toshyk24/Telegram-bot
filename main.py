@@ -1,6 +1,5 @@
 import os
 import openai
-import random
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -19,16 +18,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
 
-    # Запрос к OpenAI API для генерации ответа
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=f"Сыграй роль скептически настроенного клиента. Ответь на возражение: {user_message}",
+    # Запрос к OpenAI API для генерации ответа с использованием нового Chat API
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "Ты скептически настроенный клиент, отвечай язвительно и остроумно на возражения."},
+            {"role": "user", "content": user_message}
+        ],
         max_tokens=100,
         temperature=0.7
     )
 
     # Извлекаем текст ответа от модели
-    ai_response = response.choices[0].text.strip()
+    ai_response = response['choices'][0]['message']['content']
     await update.message.reply_text(ai_response)
 
 if __name__ == '__main__':
