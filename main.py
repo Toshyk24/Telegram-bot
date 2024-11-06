@@ -1,7 +1,8 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = '8191510937:AAEaJKNy0aIwNNPcE-XsIaV251z_cBxoVXc'
+import os
+TOKEN = os.getenv("TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Привет! Я бот для отработки возражений. Задай мне любой вопрос, и я помогу тебе отработать возражение.")
