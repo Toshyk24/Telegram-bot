@@ -6,29 +6,58 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 # Получаем токен из переменной окружения
 TOKEN = os.getenv("TOKEN")
 
-# Список возражений
-objections = [
-    "Это слишком дорого для меня.",
-    "Я не уверен в качестве обучения.",
-    "А будут ли результаты после этих уроков?",
-    "Что, если мне не понравится? Можно ли вернуть деньги?",
-    "У вас есть опытные преподаватели?",
-]
+# Библиотека возражений для музыкальной школы
+objections = {
+    "price": [
+        "Мне кажется, что это слишком дорого для меня.",
+        "Я не уверен, стоит ли это своих денег.",
+        "Есть ли у вас скидки для постоянных учеников?",
+        "Если я захочу прекратить занятия, смогу ли я получить частичный возврат?"
+    ],
+    "results": [
+        "Сколько времени потребуется, чтобы достичь первых результатов?",
+        "Мне показалось, что на пробном занятии прогресс был медленным.",
+        "Какой уровень я смогу достичь через полгода занятий?",
+        "А смогу ли я самостоятельно практиковаться дома и видеть улучшения?"
+    ],
+    "teachers": [
+        "А преподаватели у вас квалифицированные?",
+        "Смогу ли я поменять преподавателя, если он мне не подойдет?",
+        "Преподаватель на пробном занятии показался слишком молодым. Как мне понять, что он достаточно опытен?",
+        "А преподаватели сами профессиональные музыканты?"
+    ],
+    "trial": [
+        "Мне хотелось бы, чтобы занятия были более практическими.",
+        "На пробном занятии было интересно, но я не понял, какой будет структура занятий.",
+        "Какой метод обучения вы используете? Это традиционная методика или что-то современное?",
+        "У меня были другие ожидания от пробного занятия."
+    ],
+    "schedule": [
+        "А я могу сам выбирать дни и время для занятий?",
+        "Что если мне нужно будет отменить или перенести урок?",
+        "Если у меня возникнет перерыв на несколько недель, что с занятиями?",
+        "Можно ли заморозить занятия, если мне нужно уехать?"
+    ],
+    "guarantee": [
+        "Какую гарантию вы можете дать, что я достигну результата?",
+        "Что будет, если мне не понравятся первые занятия?",
+        "Могу ли я прекратить обучение без штрафов, если пойму, что это не мое?",
+        "Если я не увижу прогресса, смогу ли я изменить программу обучения?"
+    ]
+}
 
-# Ответы бота на успешную и неуспешную отработку возражений
+# Ответы на успешные, нейтральные и неуспешные отработки возражений
 positive_responses = [
-    "Хороший ответ! Это действительно меня убедило.",
-    "Вы меня убедили, теперь это звучит гораздо лучше!",
-    "Отлично, теперь я понимаю, что это стоит своих денег.",
-    "Звучит разумно! Спасибо за объяснение.",
-    "Теперь это выглядит куда более привлекательно!"
+    "Спасибо, теперь мне стало понятнее!",
+    "Звучит убедительно, спасибо за объяснение!",
+    "Теперь это выглядит куда более привлекательно!",
+    "Хороший ответ! Это действительно меня убедило."
 ]
 
 neutral_responses = [
     "Интересная мысль, но, возможно, есть что-то еще?",
     "Любопытный подход. А что еще можете добавить?",
     "Неплохо, но я все еще не до конца уверен.",
-    "Хм, пока не совсем убедительно. Продолжайте.",
     "Звучит интересно, но мне нужно больше уверенности."
 ]
 
@@ -36,67 +65,74 @@ negative_responses = [
     "Мм, не совсем убедительно. Попробуйте ответить более подробно.",
     "Этого недостаточно, чтобы развеять мои сомнения.",
     "Мне все еще кажется, что это не стоит своих денег. Попробуйте еще раз.",
-    "Я пока не убежден. Пожалуйста, попробуйте другой подход.",
     "Не совсем то, что я хотел услышать. Возможно, попробуете что-то другое?"
 ]
 
-# Ключевые слова для определения успешной отработки возражений
+# Ключевые слова для успешной отработки возражений по категориям
 keywords = {
-    "дорого": ["инвестиция", "качество", "опыт", "ценность", "перспектива"],
-    "качество": ["профессионал", "опыт", "подход", "навык", "успех"],
-    "результаты": ["достижения", "успех", "поддержка", "цель", "эффект"],
-    "возврат": ["гарантия", "возврат", "безопасность", "уверенность"],
-    "преподаватели": ["опыт", "сертификация", "квалификация", "знания"]
+    "price": ["инвестиция", "качество", "ценность", "опыт", "гибкость"],
+    "results": ["прогресс", "достижения", "успех", "цель", "регулярность"],
+    "teachers": ["опыт", "квалификация", "музыкант", "профессионал", "подход"],
+    "trial": ["структура", "методика", "обзор", "практика", "глубокий"],
+    "schedule": ["гибкость", "удобно", "перенос", "заморозить", "регулярность"],
+    "guarantee": ["гарантия", "уверенность", "возврат", "поддержка", "качество"]
 }
 
-# Функция для выбора случайного возражения
+# Функция для выбора случайного возражения из определенной категории
 def get_random_objection():
-    return random.choice(objections)
+    category = random.choice(list(objections.keys()))
+    objection = random.choice(objections[category])
+    return category, objection
 
-# Функция для проверки ответа пользователя
-def check_answer(user_message, objection):
-    for keyword in keywords:
-        if keyword in objection.lower():
-            # Проверяем, содержит ли ответ пользователя нужные ключевые слова
-            for kw in keywords[keyword]:
-                if kw in user_message.lower():
-                    return "positive"
-    # Добавляем "нейтральный" ответ, если ключевые слова не найдены
-    if any(word in user_message.lower() for word in ["может", "возможно", "наверное"]):
+# Функция для оценки ответа пользователя
+def check_answer(user_message, category):
+    # Проверяем, содержит ли ответ пользователя ключевые слова для данной категории
+    if category in keywords:
+        for keyword in keywords[category]:
+            if keyword in user_message.lower():
+                return "positive"
+    # Проверяем на нейтральные слова, если нет ключевых
+    if any(word in user_message.lower() for word in ["может", "возможно", "наверное", "стараемся"]):
         return "neutral"
     return "negative"
 
+# Функция для выбора ответа в зависимости от оценки
+def get_response(response_type):
+    if response_type == "positive":
+        return random.choice(positive_responses)
+    elif response_type == "neutral":
+        return random.choice(neutral_responses)
+    else:
+        return random.choice(negative_responses)
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Бот начинает с предъявления возражения
-    objection = get_random_objection()
-    context.user_data['current_objection'] = objection  # Сохраняем текущее возражение
-    await update.message.reply_text(f"Клиент: {objection}")
+    category, objection = get_random_objection()
+    context.user_data['current_objection'] = category  # Сохраняем категорию возражения
+    await update.message.reply_text(f"Ученик: {objection}")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
-    objection = context.user_data.get('current_objection', None)
+    category = context.user_data.get('current_objection', None)
     
-    if objection:
-        # Проверяем ответ пользователя
-        result = check_answer(user_message, objection)
-        if result == "positive":
-            response = random.choice(positive_responses)
-            # Смена на новое возражение
-            new_objection = get_random_objection()
-            context.user_data['current_objection'] = new_objection
-            await update.message.reply_text(f"{response}\n\nКлиент: {new_objection}")
-        elif result == "neutral":
-            response = random.choice(neutral_responses)
-            await update.message.reply_text(response)
+    if category:
+        # Проверка ответа пользователя и выбор типа реакции
+        response_type = check_answer(user_message, category)
+        response = get_response(response_type)
+
+        # Если ответ успешный (positive), бот переходит к следующему возражению
+        if response_type == "positive":
+            new_category, new_objection = get_random_objection()
+            context.user_data['current_objection'] = new_category
+            await update.message.reply_text(f"{response}\n\nУченик: {new_objection}")
         else:
-            # Отправляем негативный ответ и просим уточнить
-            response = random.choice(negative_responses)
+            # Если ответ нейтральный или негативный, бот просит дополнить
             await update.message.reply_text(response)
     else:
-        # Если нет активного возражения, просто запускаем новое
-        new_objection = get_random_objection()
-        context.user_data['current_objection'] = new_objection
-        await update.message.reply_text(f"Клиент: {new_objection}")
+        # Если нет активного возражения, запускаем новое
+        new_category, new_objection = get_random_objection()
+        context.user_data['current_objection'] = new_category
+        await update.message.reply_text(f"Ученик: {new_objection}")
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
