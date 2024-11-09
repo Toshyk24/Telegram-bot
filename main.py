@@ -1,14 +1,14 @@
 import os
 import random
-import pymorphy2
+from pymystem3 import Mystem
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Получаем токен из переменной окружения
 TOKEN = os.getenv("TOKEN")
 
-# Инициализация pymorphy2 для лемматизации
-morph = pymorphy2.MorphAnalyzer()
+# Инициализация Mystem для лемматизации
+mystem = Mystem()
 
 # Библиотека возражений для музыкальной школы
 objections = {
@@ -82,10 +82,11 @@ keywords = {
     "guarantee": ["гарантия", "уверенность", "возврат", "поддержка", "качество"]
 }
 
-# Функция для лемматизации текста
+# Функция для лемматизации текста с использованием Mystem
 def lemmatize_text(text):
-    words = text.split()
-    lemmatized_words = [morph.parse(word)[0].normal_form for word in words]
+    lemmatized_words = mystem.lemmatize(text)
+    # Убираем знаки пунктуации и пробелы из результата лемматизации
+    lemmatized_words = [word for word in lemmatized_words if word.isalpha()]
     return lemmatized_words
 
 # Функция для оценки ответа пользователя с учетом лемматизации
@@ -95,7 +96,7 @@ def check_answer(user_message, category):
     if category in keywords:
         for keyword in keywords[category]:
             # Лемматизируем ключевое слово и проверяем наличие в ответе
-            lemmatized_keyword = morph.parse(keyword)[0].normal_form
+            lemmatized_keyword = mystem.lemmatize(keyword)[0]
             if lemmatized_keyword in lemmatized_message:
                 return "positive"
     # Проверяем на нейтральные слова, если нет ключевых
