@@ -114,16 +114,24 @@ keywords = {
     ]
 }
 
-# Функция для оценки ответа пользователя
+# Функция для оценки ответа пользователя с системой баллов и проверкой длины
 def check_answer(user_message, category):
-    # Приводим ответ пользователя к нижнему регистру
     user_message = user_message.lower()
+    score = 0
+    required_score = 2  # Требуемое количество ключевых слов
+    min_length = 30  # Минимальная длина ответа в символах
+
+    if len(user_message) < min_length:
+        return "negative"
+
     if category in keywords:
         for keyword in keywords[category]:
             if keyword in user_message:
-                return "positive"
-    # Проверяем на нейтральные слова, если нет ключевых
-    if any(word in user_message for word in ["может", "возможно", "наверное", "стараемся"]):
+                score += 1
+                if score >= required_score:
+                    return "positive"
+    
+    if score == 1:
         return "neutral"
     return "negative"
 
@@ -166,7 +174,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             # Если ответ нейтральный или негативный, бот просит дополнить
             await update.message.reply_text(response)
     else:
-            # Если нет активного возражения, запускаем новое
+        # Если нет активного возражения, запускаем новое
         new_category, new_objection = get_random_objection()
         context.user_data['current_objection'] = new_category
         await update.message.reply_text(f"Ученик: {new_objection}")
