@@ -114,11 +114,19 @@ keywords = {
     ]
 }
 
+# Функция для определения диапазона `required_score` по категории
+def get_required_score_range(category):
+    if category in ["price", "schedule"]:
+        return random.randint(1, 3)  # Простые возражения
+    elif category in ["results", "teachers", "trial", "guarantee"]:
+        return random.randint(3, 5)  # Сложные возражения
+    return 2  # Значение по умолчанию
+
 # Функция для оценки ответа пользователя с системой баллов и проверкой длины
 def check_answer(user_message, category):
     user_message = user_message.lower()
     score = 0
-    required_score = 2  # Требуемое количество ключевых слов
+    required_score = get_required_score_range(category)  # Получаем случайное значение в диапазоне, зависящем от категории
     min_length = 30  # Минимальная длина ответа в символах
 
     if len(user_message) < min_length:
@@ -131,7 +139,7 @@ def check_answer(user_message, category):
                 if score >= required_score:
                     return "positive"
     
-    if score == 1:
+    if score >= 1:
         return "neutral"
     return "negative"
 
@@ -154,7 +162,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Бот начинает с предъявления возражения
     category, objection = get_random_objection()
     context.user_data['current_objection'] = category  # Сохраняем категорию возражения
-    await update.message.reply_text(f"Ученик: {objection}")
+        await update.message.reply_text(f"Ученик: {objection}")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
