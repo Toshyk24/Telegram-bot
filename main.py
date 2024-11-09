@@ -1,10 +1,14 @@
 import os
 import random
+import pymorphy2
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Получаем токен из переменной окружения
 TOKEN = os.getenv("TOKEN")
+
+# Инициализация pymorphy2 для лемматизации
+morph = pymorphy2.MorphAnalyzer()
 
 # Библиотека возражений для музыкальной школы
 objections = {
@@ -78,21 +82,24 @@ keywords = {
     "guarantee": ["гарантия", "уверенность", "возврат", "поддержка", "качество"]
 }
 
-# Функция для выбора случайного возражения из определенной категории
-def get_random_objection():
-    category = random.choice(list(objections.keys()))
-    objection = random.choice(objections[category])
-    return category, objection
+# Функция для лемматизации текста
+def lemmatize_text(text):
+    words = text.split()
+    lemmatized_words = [morph.parse(word)[0].normal_form for word in words]
+    return lemmatized_words
 
-# Функция для оценки ответа пользователя
+# Функция для оценки ответа пользователя с учетом лемматизации
 def check_answer(user_message, category):
-    # Проверяем, содержит ли ответ пользователя ключевые слова для данной категории
+    # Лемматизируем текст ответа пользователя
+    lemmatized_message = lemmatize_text(user_message.lower())
     if category in keywords:
         for keyword in keywords[category]:
-            if keyword in user_message.lower():
+            # Лемматизируем ключевое слово и проверяем наличие в ответе
+            lemmatized_keyword = morph.parse(keyword)[0].normal_form
+            if lemmatized_keyword in lemmatized_message:
                 return "positive"
     # Проверяем на нейтральные слова, если нет ключевых
-    if any(word in user_message.lower() for word in ["может", "возможно", "наверное", "стараемся"]):
+    if any(word in lemmatized_message for word in ["может", "возможно", "наверное", "стараемся"]):
         return "neutral"
     return "negative"
 
